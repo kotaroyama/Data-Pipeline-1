@@ -1,4 +1,6 @@
 from datetime import datetime
+from pathlib import Path
+import logging
 from typing import List, Dict, Any
 
 import pandas as pd
@@ -92,3 +94,18 @@ class DatabaseManager:
                 .limit(limit)
             )
             return session.exec(statement).all()
+
+    def execute_sql_file(self, sql_file_path: str) -> List[Dict[str, Any]]:
+        file_path = Path(sql_file_path)
+        if not file_path.exists():
+            logging.error(f"SQL file not found at: {file_path}")
+            return []
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            query_str = f.read()
+
+        with Session(self.engine) as session:
+            result = session.exec(text(query_str))
+            keys = result.keys()
+            rows = [dict(zip(keys, row)) for row in result.all()]
+            return rows

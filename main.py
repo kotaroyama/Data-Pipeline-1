@@ -84,6 +84,26 @@ def run_pipeline(
     )
     logging.info("=" * 50)
 
+def post_etl_audit(db_url: str, sql_file_path):
+    logging.info("=" * 50)
+    logging.info("RUNNING POST-LOAD SQL AUDIT")
+    logging.info("=" * 50)
+
+    db = DatabaseManager(db_url)
+    funnel_results = db.execute_sql_file(sql_file_path)
+    if funnel_results:
+        # for result in funnel_results:
+        #     logging.info("=" * 50)
+        #     logging.info(f"User Sessions: {result['user_session']}")
+        #     logging.info(f"Event Type: {result['event_type']}")
+        #     logging.info(f"Event Time: {result['event_time']}")
+        #     logging.info(f"Last Event Time: {result['last_event_time']}")
+        #     logging.info("=" * 50)
+        logging.info(f"Number of sessions resulting in purchase: {funnel_results[0]['number_of_sessions_resulting_in_purchase']}")
+        logging.info(f"Number of sessions resulting in purchase: {funnel_results[0]['number_of_sessions_not_resulting_in_purchase']}")
+        
+    logging.info("-" * 50)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Event Data Ingestion & Audit Pipeline"
@@ -118,5 +138,8 @@ if __name__ == "__main__":
         data_path=args.data,
         db_url=args.db,
         chunksize=args.chunksize,
-        # limit=args.limit,
+        limit=args.limit,
     )
+    
+    sql_url = "postgresql://kotaro:kotaro1106@localhost:5432/eventdb"
+    post_etl_audit(sql_url, "sql/funnel_analysis.sql")
